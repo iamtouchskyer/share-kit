@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { createReferralCard } from '@suri/share-kit';
-import { copyToClipboard } from '@suri/share-kit/utils';
+import { createReferralCard } from '@iamtouchskyer/share-kit';
+import { copyToClipboard } from '@iamtouchskyer/share-kit/utils';
 
 /**
  * ReferralCard — React wrapper for referral invitation card.

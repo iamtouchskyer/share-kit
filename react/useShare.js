@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { copyToClipboard } from '@suri/share-kit/utils';
+import { copyToClipboard } from '@iamtouchskyer/share-kit/utils';
 
 /**
  * useShare — hook for managing share flow.

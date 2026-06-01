@@ -1,5 +1,5 @@
 {
-  "name": "@suri/share-kit",
+  "name": "@iamtouchskyer/share-kit",
   "version": "0.1.0",
   "description": "Reusable share card + referral kit — framework-agnostic core",
   "type": "module",
@@ -11,5 +11,12 @@
     "./utils": "./src/utils.js"
   },
   "files": ["src/"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iamtouchskyer/share-kit.git"
+  },
   "license": "MIT"
 }

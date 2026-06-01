@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { createShareCard } from '@suri/share-kit';
-import { copyToClipboard } from '@suri/share-kit/utils';
+import { createShareCard } from '@iamtouchskyer/share-kit';
+import { copyToClipboard } from '@iamtouchskyer/share-kit/utils';
 
 /**
  * ShareButton — React wrapper for share card with modal.

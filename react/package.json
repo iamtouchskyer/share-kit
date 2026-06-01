@@ -1,7 +1,7 @@
 {
-  "name": "@suri/share-kit-react",
+  "name": "@iamtouchskyer/share-kit-react",
   "version": "0.1.0",
-  "description": "React bindings for @suri/share-kit",
+  "description": "React bindings for @iamtouchskyer/share-kit",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -16,7 +16,10 @@
     "react-dom": ">=17"
   },
   "dependencies": {
-    "@suri/share-kit": "workspace:*"
+    "@iamtouchskyer/share-kit": "^0.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT"
 }
