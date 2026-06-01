@@ -3,7 +3,7 @@
 // Factory function returns controller object with render/setTheme/export/destroy.
 
 import { resolveTheme, themes } from './themes.js';
-import { exportToImage, downloadBlob } from './export.js';
+import { exportToImage, downloadBlob, presets, getPresetSize } from './export.js';
 
 const STYLES = `
 .sk-root { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -71,6 +71,7 @@ function buildSkeleton(t) {
  * @param {object} config.branding - { name, domain, tagline?, logo? }
  * @param {object} config.content - { type, title, subtitle?, emoji?, stats?: [{value, label}] }
  * @param {string|object} config.theme - theme name or custom theme object
+ * @param {string|object} config.preset - platform preset name or { width, height }
  * @param {object} config.actions - { buildShareUrl?, onCopyLink?, onExport?, onTwitter? }
  * @param {function} config.contentRenderer - (content) => HTMLString (optional DI)
  * @returns {{ render, setTheme, setContent, exportImage, destroy }}
@@ -80,6 +81,7 @@ export function createShareCard(container, config = {}) {
     branding = { name: 'App', domain: 'example.com' },
     content = {},
     theme: initialTheme = 'light',
+    preset: initialPreset = 'card',
     actions = {},
     contentRenderer = null,
   } = config;
@@ -87,6 +89,7 @@ export function createShareCard(container, config = {}) {
   let currentTheme = resolveTheme(initialTheme);
   let currentThemeName = typeof initialTheme === 'string' ? initialTheme : 'light';
   let currentContent = { ...content };
+  let currentPreset = initialPreset;
 
   // Inject styles once
   if (!document.getElementById('sk-share-styles')) {
@@ -98,9 +101,11 @@ export function createShareCard(container, config = {}) {
 
   function renderCard() {
     const t = currentTheme;
+    const size = getPresetSize(currentPreset);
     const bgStyle = t.cardBg.includes('gradient')
       ? `background:${t.cardBg}`
       : `background:${t.cardBg}`;
+    const sizeStyle = `max-width:${size.width}px;min-height:${size.height}px`;
 
     let bodyHtml;
     if (contentRenderer) {
@@ -117,7 +122,7 @@ export function createShareCard(container, config = {}) {
     }
 
     return `
-      <div class="sk-card" style="${bgStyle};border:1px solid ${t.cardBorder}">
+      <div class="sk-card" style="${bgStyle};border:1px solid ${t.cardBorder};${sizeStyle}">
         <div class="sk-card-inner">
           ${bodyHtml}
           <div class="sk-divider" style="background:${t.cardBorder}"></div>
@@ -143,25 +148,50 @@ export function createShareCard(container, config = {}) {
     return html;
   }
 
+  function renderPresetPicker() {
+    const common = ['card', 'card-wide', 'card-square', 'twitter', 'instagram-post', 'wechat'];
+    let html = '<div class="sk-picker" style="margin-top:8px">';
+    for (const key of common) {
+      const p = presets[key];
+      if (!p) continue;
+      const active = key === currentPreset ? ' active' : '';
+      html += `<div class="sk-thumb-wrap" data-preset="${key}"><div class="sk-thumb${active}" data-preset="${key}" style="background:#f0f0f0;border:1px solid rgba(0,0,0,0.1);justify-content:center;align-items:center;font-size:8px;color:#666">${p.label.split('(')[1]?.replace(')', '') || key}</div><span class="sk-thumb-label">${key.split('-').pop()}</span></div>`;
+    }
+    html += '</div>';
+    return html;
+  }
+
   function render() {
     const cardHtml = renderCard();
     const pickerHtml = renderPicker();
+    const presetHtml = renderPresetPicker();
     const actionsHtml = `<div class="sk-actions">
       ${actions.onCopyLink ? '<button class="sk-btn secondary" data-action="copy">Copy Link</button>' : ''}
       ${actions.onTwitter ? '<button class="sk-btn secondary" data-action="twitter">Twitter</button>' : ''}
       <button class="sk-btn primary" data-action="export">Download</button>
     </div>`;
-    container.innerHTML = `<div class="sk-root">${cardHtml}${pickerHtml}${actionsHtml}</div>`;
+    container.innerHTML = `<div class="sk-root">${cardHtml}${pickerHtml}${presetHtml}${actionsHtml}</div>`;
     bindEvents();
   }
 
   function bindEvents() {
-    container.querySelectorAll('.sk-thumb-wrap').forEach(wrap => {
+    container.querySelectorAll('.sk-thumb-wrap[data-theme]').forEach(wrap => {
       wrap.addEventListener('click', () => {
         const name = wrap.dataset.theme;
         currentThemeName = name;
         currentTheme = resolveTheme(name);
-        container.querySelectorAll('.sk-thumb').forEach(t => t.classList.remove('active'));
+        container.querySelectorAll('[data-theme].sk-thumb').forEach(t => t.classList.remove('active'));
+        wrap.querySelector('.sk-thumb').classList.add('active');
+        const cardEl = container.querySelector('.sk-card');
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = renderCard();
+        cardEl.replaceWith(tempDiv.firstElementChild);
+      });
+    });
+    container.querySelectorAll('.sk-thumb-wrap[data-preset]').forEach(wrap => {
+      wrap.addEventListener('click', () => {
+        currentPreset = wrap.dataset.preset;
+        container.querySelectorAll('[data-preset].sk-thumb').forEach(t => t.classList.remove('active'));
         wrap.querySelector('.sk-thumb').classList.add('active');
         const cardEl = container.querySelector('.sk-card');
         const tempDiv = document.createElement('div');
@@ -181,9 +211,9 @@ export function createShareCard(container, config = {}) {
   async function doExport() {
     const cardEl = container.querySelector('.sk-card');
     if (!cardEl) return;
-    const blob = await exportToImage(cardEl);
+    const blob = await exportToImage(cardEl, { preset: currentPreset });
     if (actions.onExport) {
-      actions.onExport(blob);
+      actions.onExport(blob, currentPreset);
     } else {
       downloadBlob(blob, `${branding.name.replace(/\s+/g, '-').toLowerCase()}-share.png`);
     }
@@ -202,7 +232,18 @@ export function createShareCard(container, config = {}) {
       currentContent = { ...newContent };
       render();
     },
+    setPreset(preset) {
+      currentPreset = preset;
+      render();
+    },
     exportImage: doExport,
+    /** Export for a specific platform preset without changing the preview */
+    async exportFor(preset) {
+      const cardEl = container.querySelector('.sk-card');
+      if (!cardEl) return null;
+      return exportToImage(cardEl, { preset });
+    },
+    getPresets() { return presets; },
     destroy() { container.textContent = ''; },
   };
 }
