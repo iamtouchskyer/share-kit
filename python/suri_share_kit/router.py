@@ -97,7 +97,13 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
             )
             db.commit()
 
-        return ReferralStats(referral_code=code, referral_count=0, url=f"/?ref={code}")
+        count_row = db.execute(
+            f"SELECT COUNT(*) as cnt FROM {config.referral_rewards_table} WHERE referrer_id = ?",
+            (user_id,),
+        ).fetchone()
+        count = count_row["cnt"] if count_row else 0
+
+        return ReferralStats(referral_code=code, referral_count=count, url=f"/?ref={code}")
 
     @router.get("/referral/stats", response_model=ReferralStats)
     async def get_referral_stats(

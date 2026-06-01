@@ -18,21 +18,27 @@ export function useShare(config = {}) {
   const [shareCode, setShareCode] = useState(null);
   const [shareUrl, setShareUrl] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const createShare = useCallback(async (shareType, payload) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetchFn(`${apiBase}/shares`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ share_type: shareType, payload }),
       });
+      if (!res.ok) throw new Error(`Share failed: ${res.status}`);
       const data = await res.json();
       const code = data.share_code;
       const url = buildShareUrl(code);
       setShareCode(code);
       setShareUrl(url);
       return { code, url };
+    } catch (e) {
+      setError(e);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -48,5 +54,5 @@ export function useShare(config = {}) {
     window.open(twitterUrl, '_blank');
   }, [shareUrl]);
 
-  return { shareCode, shareUrl, loading, createShare, copyLink, tweetShare };
+  return { shareCode, shareUrl, loading, error, createShare, copyLink, tweetShare };
 }

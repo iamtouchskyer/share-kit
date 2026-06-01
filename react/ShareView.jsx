@@ -49,10 +49,8 @@ export default function ShareView({
         stats: data.payload?.stats,
       },
       theme: 'ocean',
-      actions: {}, // read-only, no actions
+      readonly: true,
     });
-    // Remove picker and actions for public view
-    containerRef.current.querySelectorAll('.sk-picker, .sk-actions').forEach(el => el.remove());
     return () => card.destroy();
   }, [data]);
 

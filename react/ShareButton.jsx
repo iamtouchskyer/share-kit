@@ -54,6 +54,9 @@ export default function ShareButton({
     setOpen(true);
   };
 
+  // Stable serialization to avoid infinite re-render from object props
+  const configKey = JSON.stringify({ branding, content, theme });
+
   useEffect(() => {
     if (!open || !containerRef.current) return;
     cardRef.current = createShareCard(containerRef.current, {
@@ -73,7 +76,7 @@ export default function ShareButton({
       },
     });
     return () => { cardRef.current?.destroy(); };
-  }, [open, branding, content, theme, shareUrl]);
+  }, [open, configKey, shareUrl]);
 
   return (
     <>

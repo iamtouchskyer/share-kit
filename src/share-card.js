@@ -101,16 +101,14 @@ export function createShareCard(container, config = {}) {
   function renderCard() {
     const t = currentTheme;
     const size = getPresetSize(currentPreset);
-    const bgStyle = t.cardBg.includes('gradient')
-      ? `background:${t.cardBg}`
-      : `background:${t.cardBg}`;
+    const bgStyle = `background:${t.cardBg}`;
     const sizeStyle = `max-width:${size.width}px;min-height:${size.height}px`;
 
     let bodyHtml;
     if (contentRenderer) {
       bodyHtml = contentRenderer(currentContent);
     } else {
-      const emoji = currentContent.emoji ? `<div class="sk-emoji">${currentContent.emoji}</div>` : '';
+      const emoji = currentContent.emoji ? `<div class="sk-emoji">${escapeHtml(currentContent.emoji)}</div>` : '';
       const title = currentContent.title ? `<div class="sk-title" style="color:${t.text}">${escapeHtml(currentContent.title)}</div>` : '';
       const subtitle = currentContent.subtitle ? `<div class="sk-subtitle" style="color:${t.secondary}">${escapeHtml(currentContent.subtitle)}</div>` : '';
       const stats = (currentContent.stats || []).map(s =>
@@ -139,9 +137,7 @@ export function createShareCard(container, config = {}) {
     for (const [key, t] of Object.entries(themes)) {
       const needsBorder = !t.isDark && !t.cardBg.includes('gradient');
       const borderStyle = needsBorder ? 'border:1px solid rgba(0,0,0,0.1);' : '';
-      const bg = t.cardBg.includes('gradient') ? t.cardBg : `background:${t.cardBg}`;
-      const bgProp = t.cardBg.includes('gradient') ? `background:${t.cardBg}` : `background:${t.cardBg}`;
-      html += `<div class="sk-thumb-wrap" data-theme="${key}"><div class="sk-thumb${key === currentThemeName ? ' active' : ''}" data-theme="${key}" style="${bgProp};${borderStyle}">${buildSkeleton(t)}</div><span class="sk-thumb-label">${t.name}</span></div>`;
+      html += `<div class="sk-thumb-wrap" data-theme="${key}"><div class="sk-thumb${key === currentThemeName ? ' active' : ''}" data-theme="${key}" style="background:${t.cardBg};${borderStyle}">${buildSkeleton(t)}</div><span class="sk-thumb-label">${t.name}</span></div>`;
     }
     html += '</div>';
     return html;

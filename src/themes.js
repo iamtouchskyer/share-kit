@@ -89,10 +89,21 @@ export const themes = {
   },
 };
 
+/**
+ * Create a custom theme by overriding light theme defaults.
+ * @param {object} overrides - Partial theme object. Keys: cardBg, cardBorder, cardShadow?,
+ *   text, secondary, accent, accentText, chipBg, chipText, brand, contentBg, codeBg, isDark?, name?
+ * @returns {object} Complete theme object
+ */
 export function createTheme(overrides) {
   return { ...themes.light, ...overrides };
 }
 
+/**
+ * Resolve a theme input to a theme object.
+ * @param {string|object|null} input - Theme name (e.g. 'dark'), custom theme object, or null
+ * @returns {object} Resolved theme object (falls back to 'light')
+ */
 export function resolveTheme(input) {
   if (typeof input === 'string') return themes[input] || themes.light;
   if (typeof input === 'object' && input !== null) return { ...themes.light, ...input };

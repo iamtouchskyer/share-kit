@@ -13,7 +13,10 @@ function lazyLoadHtml2Canvas(cdnUrl) {
     const s = document.createElement('script');
     s.src = cdnUrl || 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
     s.onload = () => resolve(window.html2canvas);
-    s.onerror = () => reject(new Error('Failed to load html2canvas'));
+    s.onerror = () => {
+      html2canvasPromise = null; // Reset so next call retries
+      reject(new Error('Failed to load html2canvas'));
+    };
     document.head.appendChild(s);
   });
   return html2canvasPromise;
