@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.js",
     "./themes": "./src/themes.js",
-    "./export": "./src/export.js"
+    "./export": "./src/export.js",
+    "./utils": "./src/utils.js"
   },
   "files": ["src/"],
   "license": "MIT"

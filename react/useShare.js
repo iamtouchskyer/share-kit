@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { copyToClipboard } from '@suri/share-kit/utils';
 
 /**
  * useShare — hook for managing share flow.
@@ -38,7 +39,7 @@ export function useShare(config = {}) {
   }, [apiBase, fetchFn, buildShareUrl]);
 
   const copyLink = useCallback(() => {
-    if (shareUrl) navigator.clipboard.writeText(shareUrl);
+    if (shareUrl) copyToClipboard(shareUrl);
   }, [shareUrl]);
 
   const tweetShare = useCallback((text) => {

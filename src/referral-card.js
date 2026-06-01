@@ -2,10 +2,7 @@
 // Same factory pattern as share-card.
 
 import { resolveTheme } from './themes.js';
-
-function escapeHtml(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+import { escapeHtml, copyToClipboard } from './utils.js';
 
 const REFERRAL_STYLES = `
 .sk-ref-root { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -51,7 +48,7 @@ export function createReferralCard(container, config = {}) {
   } = config;
 
   let currentStats = { ...stats };
-  const t = resolveTheme(initialTheme);
+  let t = resolveTheme(initialTheme);
 
   // Inject styles once
   if (!document.getElementById('sk-ref-styles')) {
@@ -85,7 +82,7 @@ export function createReferralCard(container, config = {}) {
     `;
     container.querySelector('[data-action="copy"]')?.addEventListener('click', () => {
       if (onCopy) onCopy(code, url);
-      else navigator.clipboard.writeText(url);
+      else copyToClipboard(url);
     });
   }
 
@@ -95,6 +92,10 @@ export function createReferralCard(container, config = {}) {
     render,
     updateStats(newStats) {
       currentStats = { ...currentStats, ...newStats };
+      render();
+    },
+    setTheme(name) {
+      t = resolveTheme(name);
       render();
     },
     destroy() { container.textContent = ''; },

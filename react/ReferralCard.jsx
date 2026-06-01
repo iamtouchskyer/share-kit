@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { createReferralCard } from '@suri/share-kit';
+import { copyToClipboard } from '@suri/share-kit/utils';
 
 /**
  * ReferralCard — React wrapper for referral invitation card.
@@ -43,7 +44,7 @@ export default function ReferralCard({
           branding,
           theme,
           onCopy: onCopy || ((code, url) => {
-            navigator.clipboard.writeText(url);
+            copyToClipboard(url);
           }),
         });
       } catch (e) {
@@ -53,7 +54,7 @@ export default function ReferralCard({
       }
     })();
     return () => { mounted = false; cardRef.current?.destroy(); };
-  }, []);
+  }, [apiBase, fetchFn, branding, reward, theme, onCopy]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center', color: '#999' }}>Loading...</div>;
   return <div ref={containerRef} />;

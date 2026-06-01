@@ -4,6 +4,7 @@
 
 import { resolveTheme, themes } from './themes.js';
 import { exportToImage, downloadBlob, presets, getPresetSize } from './export.js';
+import { escapeHtml, copyToClipboard } from './utils.js';
 
 const STYLES = `
 .sk-root { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -49,14 +50,6 @@ const STYLES = `
 .sk-btn.secondary:hover { background: rgba(0,0,0,0.1); }
 `;
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 function buildSkeleton(t) {
   const barColor = t.isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.12)';
@@ -213,7 +206,7 @@ export function createShareCard(container, config = {}) {
     });
     container.querySelector('[data-action="export"]')?.addEventListener('click', doExport);
     container.querySelector('[data-action="copy"]')?.addEventListener('click', () => {
-      if (actions.onCopyLink) actions.onCopyLink();
+      if (actions.onCopyLink) actions.onCopyLink({ copyToClipboard });
     });
     container.querySelector('[data-action="twitter"]')?.addEventListener('click', () => {
       if (actions.onTwitter) actions.onTwitter();

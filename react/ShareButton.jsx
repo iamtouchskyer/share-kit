@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { createShareCard } from '@suri/share-kit';
+import { copyToClipboard } from '@suri/share-kit/utils';
 
 /**
  * ShareButton — React wrapper for share card with modal.
@@ -61,7 +62,7 @@ export default function ShareButton({
       theme,
       actions: {
         onCopyLink: () => {
-          if (shareUrl) navigator.clipboard.writeText(shareUrl);
+          if (shareUrl) copyToClipboard(shareUrl);
         },
         onTwitter: () => {
           if (!shareUrl) return;
@@ -72,7 +73,7 @@ export default function ShareButton({
       },
     });
     return () => { cardRef.current?.destroy(); };
-  }, [open]);
+  }, [open, branding, content, theme, shareUrl]);
 
   return (
     <>
