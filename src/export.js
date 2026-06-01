@@ -20,29 +20,27 @@ function lazyLoadHtml2Canvas(cdnUrl) {
 }
 
 /**
- * Platform presets — predefined sizes for social media / messaging.
- * Each defines width (px) and aspect ratio.
- * Height is calculated from width * ratio.
+ * Platform presets — predefined export sizes for social media / messaging.
+ * Each defines exact width × height in pixels.
  */
 export const presets = {
-  // Square formats
-  'instagram-post': { width: 1080, ratio: 1, label: 'Instagram Post (1:1)' },
-  'instagram-story': { width: 1080, ratio: 16 / 9, label: 'Instagram Story (9:16)', portrait: true },
-  // Wide formats
-  'twitter': { width: 1200, ratio: 1200 / 628, label: 'Twitter Card (1.91:1)' },
-  'og': { width: 1200, ratio: 1200 / 630, label: 'Open Graph (1.91:1)' },
-  'linkedin': { width: 1200, ratio: 1200 / 627, label: 'LinkedIn Post (1.91:1)' },
-  'facebook': { width: 1200, ratio: 1200 / 630, label: 'Facebook Share (1.91:1)' },
-  // Messaging / mobile
-  'wechat': { width: 900, ratio: 900 / 500, label: 'WeChat Moments (9:5)' },
-  'wechat-chat': { width: 600, ratio: 1, label: 'WeChat Chat (1:1)' },
-  'whatsapp': { width: 800, ratio: 800 / 418, label: 'WhatsApp Preview (1.91:1)' },
-  // Compact
-  'card': { width: 420, ratio: 420 / 540, label: 'Standard Card (7:9)' },
-  'card-wide': { width: 600, ratio: 600 / 340, label: 'Wide Card (16:9)' },
-  'card-square': { width: 420, ratio: 1, label: 'Square Card (1:1)' },
-  // Custom override — user provides exact width+height
-  'custom': { width: 420, ratio: null, label: 'Custom' },
+  // Square
+  'instagram-post': { width: 1080, height: 1080, label: 'Instagram Post (1:1)' },
+  'wechat-chat': { width: 600, height: 600, label: 'WeChat Chat (1:1)' },
+  'card-square': { width: 420, height: 420, label: 'Square (1:1)' },
+  // Portrait
+  'instagram-story': { width: 1080, height: 1920, label: 'Instagram Story (9:16)' },
+  // Landscape — social OG (≈1.91:1)
+  'twitter': { width: 1200, height: 628, label: 'Twitter Card (1200×628)' },
+  'og': { width: 1200, height: 630, label: 'Open Graph (1200×630)' },
+  'linkedin': { width: 1200, height: 627, label: 'LinkedIn (1200×627)' },
+  'facebook': { width: 1200, height: 630, label: 'Facebook (1200×630)' },
+  'whatsapp': { width: 800, height: 418, label: 'WhatsApp (800×418)' },
+  // Landscape — other
+  'wechat': { width: 900, height: 500, label: 'WeChat Moments (9:5)' },
+  'card-wide': { width: 600, height: 338, label: 'Wide Card (16:9)' },
+  // Tall card (default)
+  'card': { width: 420, height: 540, label: 'Card (7:9)' },
 };
 
 /**
@@ -55,9 +53,7 @@ export function getPresetSize(preset) {
     return { width: preset.width, height: preset.height };
   }
   const p = presets[preset] || presets['card'];
-  const width = p.width;
-  const height = p.portrait ? width * p.ratio : Math.round(width / p.ratio);
-  return { width, height };
+  return { width: p.width, height: p.height };
 }
 
 /**

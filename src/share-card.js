@@ -155,7 +155,9 @@ export function createShareCard(container, config = {}) {
       const p = presets[key];
       if (!p) continue;
       const active = key === currentPreset ? ' active' : '';
-      html += `<div class="sk-thumb-wrap" data-preset="${key}"><div class="sk-thumb${active}" data-preset="${key}" style="background:#f0f0f0;border:1px solid rgba(0,0,0,0.1);justify-content:center;align-items:center;font-size:8px;color:#666">${p.label.split('(')[1]?.replace(')', '') || key}</div><span class="sk-thumb-label">${key.split('-').pop()}</span></div>`;
+      const ratio = `${p.width}×${p.height}`;
+      const shortLabel = key.replace('card-', '').replace('instagram-', 'ig-');
+      html += `<div class="sk-thumb-wrap" data-preset="${key}"><div class="sk-thumb${active}" data-preset="${key}" style="background:#f0f0f0;border:1px solid rgba(0,0,0,0.1);justify-content:center;align-items:center;font-size:7px;color:#666">${ratio}</div><span class="sk-thumb-label">${shortLabel}</span></div>`;
     }
     html += '</div>';
     return html;
