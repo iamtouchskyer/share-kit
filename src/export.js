@@ -11,7 +11,7 @@ function lazyLoadHtml2Canvas(cdnUrl) {
   if (html2canvasPromise) return html2canvasPromise;
   html2canvasPromise = new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = cdnUrl || 'https://cdn.jsdelivr.net/npm/html2canvas@1/dist/html2canvas.min.js';
+    s.src = cdnUrl || 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
     s.onload = () => resolve(window.html2canvas);
     s.onerror = () => reject(new Error('Failed to load html2canvas'));
     document.head.appendChild(s);
@@ -63,7 +63,7 @@ export function getPresetSize(preset) {
  * @param {number} options.scale - DPI scale (default 2)
  * @param {string} options.format - 'png' | 'jpeg' | 'webp'
  * @param {number} options.quality - JPEG/WebP quality (0-1)
- * @param {string} options.html2canvasUrl - custom CDN URL
+ * @param {string} options.html2canvasUrl - custom CDN URL or pass html2canvas module
  * @param {string|object} options.preset - platform preset name or { width, height }
  * @param {number} options.width - explicit width override (px)
  * @param {number} options.height - explicit height override (px)
@@ -84,43 +84,49 @@ export async function exportToImage(element, options = {}) {
   let targetWidth, targetHeight;
   if (explicitWidth) {
     targetWidth = explicitWidth;
-    targetHeight = explicitHeight || null; // null = auto height
+    targetHeight = explicitHeight || null;
   } else {
     const size = getPresetSize(preset);
     targetWidth = size.width;
     targetHeight = size.height;
   }
 
-  // Apply fixed dimensions for capture
+  // Save original styles
   const origWidth = element.style.width;
   const origHeight = element.style.height;
   const origMinHeight = element.style.minHeight;
   const origOverflow = element.style.overflow;
 
-  element.style.width = targetWidth + 'px';
-  if (targetHeight) {
-    element.style.minHeight = targetHeight + 'px';
-    element.style.overflow = 'hidden';
+  try {
+    // Apply fixed dimensions for capture
+    element.style.width = targetWidth + 'px';
+    if (targetHeight) {
+      element.style.minHeight = targetHeight + 'px';
+      element.style.overflow = 'hidden';
+    }
+
+    const h2c = await lazyLoadHtml2Canvas(html2canvasUrl);
+    const canvas = await h2c(element, {
+      scale,
+      useCORS: true,
+      backgroundColor: null,
+      width: targetWidth,
+      height: targetHeight || undefined,
+    });
+
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Canvas toBlob returned null — canvas may be tainted'));
+      }, `image/${format}`, quality);
+    });
+  } finally {
+    // Always restore styles, even if html2canvas throws
+    element.style.width = origWidth;
+    element.style.height = origHeight;
+    element.style.minHeight = origMinHeight;
+    element.style.overflow = origOverflow;
   }
-
-  const h2c = await lazyLoadHtml2Canvas(html2canvasUrl);
-  const canvas = await h2c(element, {
-    scale,
-    useCORS: true,
-    backgroundColor: null,
-    width: targetWidth,
-    height: targetHeight || undefined,
-  });
-
-  // Restore
-  element.style.width = origWidth;
-  element.style.height = origHeight;
-  element.style.minHeight = origMinHeight;
-  element.style.overflow = origOverflow;
-
-  return new Promise((resolve) => {
-    canvas.toBlob(resolve, `image/${format}`, quality);
-  });
 }
 
 /**
@@ -132,5 +138,6 @@ export function downloadBlob(blob, filename = 'share-card.png') {
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  // Delay revoke to give browsers time to start download
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

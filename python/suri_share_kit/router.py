@@ -4,56 +4,45 @@ Generic share + referral endpoints. All project-specific logic
 lives in ShareKitConfig (DB access, reward strategy, table names).
 """
 
+import json
 import secrets
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from .config import ShareKitConfig
 from .schemas import ShareCreate, ShareResponse, ReferralStats
 
 
+class ReferralApply(BaseModel):
+    code: str
+
+
 def create_share_router(config: ShareKitConfig) -> APIRouter:
-    """Create a FastAPI router with share + referral endpoints.
-
-    Usage:
-        from suri_share_kit import create_share_router, ShareKitConfig
-
-        share_router = create_share_router(ShareKitConfig(
-            get_db=get_db,
-            get_current_user=get_current_user,
-            reward_strategy=my_reward_fn,
-            branding={"name": "My App", "domain": "myapp.com"},
-        ))
-        app.include_router(share_router, prefix="/api")
-    """
+    """Create a FastAPI router with share + referral endpoints."""
     router = APIRouter(tags=["share-kit"])
 
     # --- Share endpoints ---
 
-    @router.post("/shares", response_model=dict)
+    @router.post("/shares", response_model=ShareResponse)
     async def create_share(
         body: ShareCreate,
         db=Depends(config.get_db),
         user=Depends(config.get_current_user),
     ):
         if body.share_type not in config.allowed_share_types:
-            raise HTTPException(400, f"Invalid share_type. Allowed: {config.allowed_share_types}")
+            raise HTTPException(400, "Invalid share_type")
 
         share_code = secrets.token_urlsafe(6)
         user_id = getattr(user, config.user_id_field, None) or user.get(config.user_id_field)
 
-        # Insert — raw SQL (works with any DB that supports execute())
-        import json
         db.execute(
             f"INSERT INTO {config.shares_table} (share_code, user_id, share_type, payload) VALUES (?, ?, ?, ?)",
             (share_code, user_id, body.share_type, json.dumps(body.payload)),
         )
         db.commit()
 
-        return {
-            "share_code": share_code,
-            "url": f"/s/{share_code}",
-        }
+        return ShareResponse(share_code=share_code, share_type=body.share_type, payload=body.payload)
 
-    @router.get("/shares/{share_code}", response_model=dict)
+    @router.get("/shares/{share_code}", response_model=ShareResponse)
     async def get_share(share_code: str, db=Depends(config.get_db)):
         row = db.execute(
             f"""SELECT s.share_code, s.share_type, s.payload, s.view_count,
@@ -66,29 +55,28 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
         if not row:
             raise HTTPException(404, "Share not found")
 
-        # Increment view count
+        # Atomic increment
         db.execute(
             f"UPDATE {config.shares_table} SET view_count = view_count + 1 WHERE share_code = ?",
             (share_code,),
         )
         db.commit()
 
-        import json
         payload = row["payload"]
         if isinstance(payload, str):
             payload = json.loads(payload)
 
-        return {
-            "share_code": row["share_code"],
-            "share_type": row["share_type"],
-            "payload": payload,
-            "user_name": row["user_name"],
-            "view_count": row["view_count"],
-        }
+        return ShareResponse(
+            share_code=row["share_code"],
+            share_type=row["share_type"],
+            payload=payload,
+            user_name=row["user_name"],
+            view_count=row["view_count"] + 1,
+        )
 
     # --- Referral endpoints ---
 
-    @router.get("/referral/code", response_model=dict)
+    @router.get("/referral/code", response_model=ReferralStats)
     async def get_referral_code(
         db=Depends(config.get_db),
         user=Depends(config.get_current_user),
@@ -109,41 +97,32 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
             )
             db.commit()
 
-        return {
-            "referral_code": code,
-            "url": f"/?ref={code}",
-        }
+        return ReferralStats(referral_code=code, referral_count=0, url=f"/?ref={code}")
 
-    @router.get("/referral/stats", response_model=dict)
+    @router.get("/referral/stats", response_model=ReferralStats)
     async def get_referral_stats(
         db=Depends(config.get_db),
         user=Depends(config.get_current_user),
     ):
         user_id = getattr(user, config.user_id_field, None) or user.get(config.user_id_field)
 
-        # Get code
         row = db.execute(
             f"SELECT {config.user_referral_code_field} FROM {config.users_table} WHERE {config.user_id_field} = ?",
             (user_id,),
         ).fetchone()
         code = row[config.user_referral_code_field] if row else ""
 
-        # Count referrals
         count_row = db.execute(
             f"SELECT COUNT(*) as cnt FROM {config.referral_rewards_table} WHERE referrer_id = ?",
             (user_id,),
         ).fetchone()
         count = count_row["cnt"] if count_row else 0
 
-        return {
-            "referral_code": code,
-            "referral_count": count,
-            "url": f"/?ref={code}",
-        }
+        return ReferralStats(referral_code=code, referral_count=count, url=f"/?ref={code}")
 
     @router.post("/referral/apply", response_model=dict)
     async def apply_referral(
-        code: str,
+        body: ReferralApply,
         db=Depends(config.get_db),
         user=Depends(config.get_current_user),
     ):
@@ -152,7 +131,7 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
         # Find referrer
         referrer = db.execute(
             f"SELECT {config.user_id_field} FROM {config.users_table} WHERE {config.user_referral_code_field} = ?",
-            (code,),
+            (body.code,),
         ).fetchone()
         if not referrer:
             raise HTTPException(404, "Invalid referral code")
@@ -160,6 +139,14 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
         referrer_id = referrer[config.user_id_field]
         if referrer_id == user_id:
             raise HTTPException(400, "Cannot refer yourself")
+
+        # 🔴 FIX: Idempotency check — prevent duplicate referral rewards
+        existing = db.execute(
+            f"SELECT 1 FROM {config.referral_rewards_table} WHERE referee_id = ?",
+            (user_id,),
+        ).fetchone()
+        if existing:
+            raise HTTPException(409, "Referral already applied")
 
         # Apply reward strategy
         result = None

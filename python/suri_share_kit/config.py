@@ -1,7 +1,16 @@
 """ShareKitConfig — all project-specific behavior injected here."""
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Callable
+
+_IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+
+def _validate_identifier(name: str, field_name: str):
+    """Validate SQL identifier to prevent injection."""
+    if not _IDENTIFIER_RE.match(name):
+        raise ValueError(f"Invalid SQL identifier for {field_name}: {name!r}")
 
 
 @dataclass
@@ -41,3 +50,11 @@ class ShareKitConfig:
     user_id_field: str = "id"
     user_name_field: str = "name"
     user_referral_code_field: str = "referral_code"
+
+    def __post_init__(self):
+        """Validate all identifier fields to prevent SQL injection."""
+        for field_name in (
+            "shares_table", "users_table", "referral_rewards_table",
+            "user_id_field", "user_name_field", "user_referral_code_field",
+        ):
+            _validate_identifier(getattr(self, field_name), field_name)

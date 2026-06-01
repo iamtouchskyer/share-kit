@@ -20,8 +20,12 @@ const STYLES = `
 .sk-card {
   max-width: 420px; width: 100%; border-radius: 16px; overflow: hidden;
   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  display: flex; flex-direction: column;
 }
-.sk-card-inner { padding: 30px; overflow-wrap: break-word; }
+.sk-card-inner {
+  padding: 30px; overflow-wrap: break-word;
+  flex: 1; display: flex; flex-direction: column; justify-content: center;
+}
 .sk-emoji { font-size: 48px; text-align: center; margin-bottom: 12px; }
 .sk-title { font-size: 24px; font-weight: 700; text-align: center; line-height: 1.4; margin-bottom: 8px; }
 .sk-subtitle { font-size: 14px; text-align: center; margin-bottom: 16px; }
@@ -73,7 +77,8 @@ function buildSkeleton(t) {
  * @param {string|object} config.theme - theme name or custom theme object
  * @param {string|object} config.preset - platform preset name or { width, height }
  * @param {object} config.actions - { buildShareUrl?, onCopyLink?, onExport?, onTwitter? }
- * @param {function} config.contentRenderer - (content) => HTMLString (optional DI)
+ * @param {function} config.contentRenderer - (content) => HTMLString (⚠️ MUST return sanitized HTML — output is used as innerHTML)
+ * @param {boolean} config.readonly - if true, skip picker/actions (for public embed views)
  * @returns {{ render, setTheme, setContent, exportImage, destroy }}
  */
 export function createShareCard(container, config = {}) {
@@ -84,6 +89,7 @@ export function createShareCard(container, config = {}) {
     preset: initialPreset = 'card',
     actions = {},
     contentRenderer = null,
+    readonly = false,
   } = config;
 
   let currentTheme = resolveTheme(initialTheme);
@@ -122,7 +128,7 @@ export function createShareCard(container, config = {}) {
     }
 
     return `
-      <div class="sk-card" style="${bgStyle};border:1px solid ${t.cardBorder};${sizeStyle}">
+      <div class="sk-card" style="${bgStyle};border:1px solid ${t.cardBorder};${sizeStyle};${t.cardShadow ? `box-shadow:${t.cardShadow}` : ''}">
         <div class="sk-card-inner">
           ${bodyHtml}
           <div class="sk-divider" style="background:${t.cardBorder}"></div>
@@ -165,6 +171,10 @@ export function createShareCard(container, config = {}) {
 
   function render() {
     const cardHtml = renderCard();
+    if (readonly) {
+      container.innerHTML = `<div class="sk-root">${cardHtml}</div>`;
+      return;
+    }
     const pickerHtml = renderPicker();
     const presetHtml = renderPresetPicker();
     const actionsHtml = `<div class="sk-actions">
