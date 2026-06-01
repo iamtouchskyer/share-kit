@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>@suri/share-kit Demo</title>
+  <style>
+    body { font-family: system-ui; background: #f5f5f7; margin: 0; padding: 40px; }
+    h1 { text-align: center; color: #1d1d1f; margin-bottom: 8px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 40px; }
+    .demos { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; }
+    .demo-section { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .demo-section h2 { margin-top: 0; font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+  <h1>@suri/share-kit</h1>
+  <p class="subtitle">Framework-agnostic share card + referral components</p>
+  <div class="demos">
+    <div class="demo-section">
+      <h2>Share Card</h2>
+      <div id="share-demo"></div>
+    </div>
+    <div class="demo-section">
+      <h2>Referral Card</h2>
+      <div id="referral-demo"></div>
+    </div>
+  </div>
+  <script type="module">
+    import { createShareCard } from './src/share-card.js';
+    import { createReferralCard } from './src/referral-card.js';
+
+    createShareCard(document.getElementById('share-demo'), {
+      branding: { name: 'π Math', domain: 'pimath.dev', tagline: 'Master math competitions' },
+      content: {
+        type: 'streak',
+        emoji: '🔥',
+        title: '7 Day Streak',
+        subtitle: 'AMC 10 Training',
+        stats: [
+          { value: '42', label: 'Problems' },
+          { value: '95%', label: 'Accuracy' },
+        ],
+      },
+      theme: 'ocean',
+      actions: {
+        onCopyLink: () => alert('Link copied!'),
+        onTwitter: () => alert('Tweet!'),
+      },
+    });
+
+    createReferralCard(document.getElementById('referral-demo'), {
+      code: 'abc123xy',
+      stats: { totalReferred: 12 },
+      reward: { amount: 7, unit: 'days', description: 'Pro access' },
+      branding: { name: 'π Math', domain: 'pimath.dev' },
+      theme: 'light',
+      onCopy: (code, url) => alert('Copied: ' + url),
+    });
+  </script>
+</body>
+</html>

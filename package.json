@@ -1,0 +1,14 @@
+{
+  "name": "@suri/share-kit",
+  "version": "0.1.0",
+  "description": "Reusable share card + referral kit — framework-agnostic core",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./themes": "./src/themes.js",
+    "./export": "./src/export.js"
+  },
+  "files": ["src/"],
+  "license": "MIT"
+}

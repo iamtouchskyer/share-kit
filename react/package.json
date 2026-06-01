@@ -1,0 +1,22 @@
+{
+  "name": "@suri/share-kit-react",
+  "version": "0.1.0",
+  "description": "React bindings for @suri/share-kit",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./ShareButton": "./ShareButton.jsx",
+    "./ReferralCard": "./ReferralCard.jsx",
+    "./ShareView": "./ShareView.jsx",
+    "./useShare": "./useShare.js"
+  },
+  "peerDependencies": {
+    "react": ">=17",
+    "react-dom": ">=17"
+  },
+  "dependencies": {
+    "@suri/share-kit": "workspace:*"
+  },
+  "license": "MIT"
+}
