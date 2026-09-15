@@ -1,7 +1,7 @@
 {
   "name": "@iamtouchskyer/share-kit",
   "version": "0.2.0",
-  "description": "Reusable share card + referral kit — framework-agnostic core, zero-dependency image export",
+  "description": "Reusable share card + referral kit \u2014 framework-agnostic core, zero-dependency image export",
   "type": "module",
   "main": "src/index.js",
   "exports": {
@@ -12,7 +12,9 @@
     "./utils": "./src/utils.js",
     "./backends/html2canvas": "./src/backends/html2canvas.js"
   },
-  "files": ["src/"],
+  "files": [
+    "src/"
+  ],
   "scripts": {
     "test": "playwright test --config tests/playwright.config.js",
     "test:headed": "playwright test --config tests/playwright.config.js --headed",
@@ -30,13 +32,22 @@
       "optional": true
     }
   },
-  "keywords": ["share", "share-card", "screenshot", "png", "export", "referral", "html2canvas", "foreignobject"],
+  "keywords": [
+    "share",
+    "share-card",
+    "screenshot",
+    "png",
+    "export",
+    "referral",
+    "html2canvas",
+    "foreignobject"
+  ],
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/iamtouchskyer/share-kit.git"
+    "url": "git+https://github.com/iamtouchskyer/share-kit.git"
   },
   "license": "MIT"
 }
