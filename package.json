@@ -1,5 +1,5 @@
 {
-  "name": "@iamtouchskyer/share-kit",
+  "name": "@touchskyer/share-kit",
   "version": "0.2.0",
   "description": "Reusable share card + referral kit \u2014 framework-agnostic core, zero-dependency image export",
   "type": "module",
@@ -49,5 +49,9 @@
     "type": "git",
     "url": "git+https://github.com/iamtouchskyer/share-kit.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://github.com/iamtouchskyer/share-kit#readme",
+  "bugs": {
+    "url": "https://github.com/iamtouchskyer/share-kit/issues"
+  }
 }

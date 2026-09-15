@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { createShareCard } from '@iamtouchskyer/share-kit';
+import { createShareCard } from '@touchskyer/share-kit';
 
 /**
  * ShareView — Public landing page component for shared achievements.

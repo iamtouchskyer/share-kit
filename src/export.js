@@ -6,7 +6,7 @@
 //                (clone → inline computed styles → <svg><foreignObject>).
 //                Nothing is fetched at capture time.
 //   * html2canvas — opt in by installing it and importing the adapter:
-//                `import { html2canvasCapture } from '@iamtouchskyer/share-kit/backends/html2canvas'`
+//                `import { html2canvasCapture } from '@touchskyer/share-kit/backends/html2canvas'`
 //                It is bundled by *your* build, i.e. it ships with the app
 //                instead of being pulled from a CDN at capture time.
 //   * anything else — pass `capture: (element, opts) => Promise<Blob|HTMLCanvasElement>`
@@ -84,7 +84,7 @@ function unsupportedEngineMessage() {
     "0.1.x fetched html2canvas from a CDN, which broke sharing whenever that CDN was unreachable.",
     'Bundle it instead:',
     '  npm install html2canvas',
-    "  import { html2canvasCapture } from '@iamtouchskyer/share-kit/backends/html2canvas';",
+    "  import { html2canvasCapture } from '@touchskyer/share-kit/backends/html2canvas';",
     "  await exportToImage(el, { capture: html2canvasCapture() });",
     'Or keep the zero-dependency engine (the default) and install nothing.',
   ].join('\n');

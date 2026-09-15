@@ -1,4 +1,4 @@
-// @iamtouchskyer/share-kit — re-exports
+// @touchskyer/share-kit — re-exports
 
 export { createShareCard } from './share-card.js';
 export { createReferralCard } from './referral-card.js';

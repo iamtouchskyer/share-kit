@@ -1,7 +1,7 @@
 {
-  "name": "@iamtouchskyer/share-kit-react",
+  "name": "@touchskyer/share-kit-react",
   "version": "0.2.0",
-  "description": "React bindings for @iamtouchskyer/share-kit",
+  "description": "React bindings for @touchskyer/share-kit",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -16,10 +16,15 @@
     "react-dom": ">=17"
   },
   "dependencies": {
-    "@iamtouchskyer/share-kit": "^0.2.0"
+    "@touchskyer/share-kit": "^0.2.0"
   },
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamtouchskyer/share-kit.git",
+    "directory": "react"
+  }
 }

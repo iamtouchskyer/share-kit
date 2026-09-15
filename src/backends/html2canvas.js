@@ -10,8 +10,8 @@
 //
 // Usage:
 //   npm install html2canvas
-//   import { exportToImage } from '@iamtouchskyer/share-kit';
-//   import { html2canvasCapture } from '@iamtouchskyer/share-kit/backends/html2canvas';
+//   import { exportToImage } from '@touchskyer/share-kit';
+//   import { html2canvasCapture } from '@touchskyer/share-kit/backends/html2canvas';
 //
 //   const blob = await exportToImage(el, { capture: html2canvasCapture() });
 

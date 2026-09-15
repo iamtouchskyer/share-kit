@@ -1,4 +1,4 @@
-# @iamtouchskyer/share-kit
+# @touchskyer/share-kit
 
 Reusable **share card + referral** kit: a framework-agnostic core, optional React
 bindings, and an optional FastAPI backend.
@@ -7,13 +7,13 @@ The part worth reading about is the export engine: **any DOM node → PNG with z
 dependencies**, clipped to nothing, and no CDN in the capture path.
 
 ```bash
-npm install @iamtouchskyer/share-kit
+npm install @touchskyer/share-kit
 ```
 
 ## Share card
 
 ```js
-import { createShareCard, downloadBlob } from '@iamtouchskyer/share-kit';
+import { createShareCard, downloadBlob } from '@touchskyer/share-kit';
 
 const card = createShareCard(document.getElementById('mount'), {
   branding: { name: 'Acme', domain: 'acme.com', tagline: 'acme.com' },
@@ -35,7 +35,7 @@ await card.exportFor('og');   // → Blob at 1200×630 without changing the prev
 shared the same way:
 
 ```js
-import { exportToImage, copyImageToClipboard } from '@iamtouchskyer/share-kit';
+import { exportToImage, copyImageToClipboard } from '@touchskyer/share-kit';
 
 const blob = await exportToImage(document.querySelector('#article'), {
   preset: 'card-long',        // fixed width, height follows the content
@@ -73,8 +73,8 @@ of a shared document is worse than an image 2px taller than the platform preset.
 | anything else | — | `capture: (element, opts) => Promise<Blob \| HTMLCanvasElement>` |
 
 ```js
-import { exportToImage } from '@iamtouchskyer/share-kit';
-import { html2canvasCapture } from '@iamtouchskyer/share-kit/backends/html2canvas';
+import { exportToImage } from '@touchskyer/share-kit';
+import { html2canvasCapture } from '@touchskyer/share-kit/backends/html2canvas';
 
 const blob = await exportToImage(el, { capture: html2canvasCapture() });
 ```
@@ -161,7 +161,7 @@ cd python && pip install -e ".[dev]" && pytest    # no database required
 ```
 src/            framework-agnostic core (index, share-card, rasterize, export, themes, utils)
 src/backends/   optional html2canvas adapter
-react/          React bindings (@iamtouchskyer/share-kit-react)
+react/          React bindings (@touchskyer/share-kit-react)
 python/         FastAPI share + referral router (share_kit) with its own tests/
 tests/          Playwright suite + harness
 ```
