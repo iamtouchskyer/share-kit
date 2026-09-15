@@ -1,6 +1,6 @@
 {
   "name": "@iamtouchskyer/share-kit-react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React bindings for @iamtouchskyer/share-kit",
   "type": "module",
   "main": "index.js",
@@ -16,7 +16,7 @@
     "react-dom": ">=17"
   },
   "dependencies": {
-    "@iamtouchskyer/share-kit": "^0.1.0"
+    "@iamtouchskyer/share-kit": "^0.2.0"
   },
   "publishConfig": {
     "access": "public"

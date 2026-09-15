@@ -10,10 +10,21 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from .config import ShareKitConfig
 from .schemas import ShareCreate, ShareResponse, ReferralStats
+from .sql import render_sql
 
 
 class ReferralApply(BaseModel):
     code: str
+
+
+def _sql(statement: str, config: ShareKitConfig) -> str:
+    """Translate a neutral statement for the host app's driver.
+
+    Every statement below is written with `?` placeholders and passes through
+    here; see share_kit/sql.py for why (0.1.x hard-coded `?`, which made the
+    "generic" backend unable to run on Postgres).
+    """
+    return render_sql(statement, config.paramstyle)
 
 
 def create_share_router(config: ShareKitConfig) -> APIRouter:
@@ -35,7 +46,10 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
         user_id = getattr(user, config.user_id_field, None) or user.get(config.user_id_field)
 
         db.execute(
-            f"INSERT INTO {config.shares_table} (share_code, user_id, share_type, payload) VALUES (?, ?, ?, ?)",
+            _sql(
+                f"INSERT INTO {config.shares_table} (share_code, user_id, share_type, payload) VALUES (?, ?, ?, ?)",
+                config,
+            ),
             (share_code, user_id, body.share_type, json.dumps(body.payload)),
         )
         db.commit()
@@ -45,11 +59,14 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
     @router.get("/shares/{share_code}", response_model=ShareResponse)
     async def get_share(share_code: str, db=Depends(config.get_db)):
         row = db.execute(
-            f"""SELECT s.share_code, s.share_type, s.payload, s.view_count,
+            _sql(
+                f"""SELECT s.share_code, s.share_type, s.payload, s.view_count,
                        u.{config.user_name_field} as user_name
                 FROM {config.shares_table} s
                 LEFT JOIN {config.users_table} u ON s.user_id = u.{config.user_id_field}
                 WHERE s.share_code = ?""",
+                config,
+            ),
             (share_code,),
         ).fetchone()
         if not row:
@@ -57,7 +74,10 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
 
         # Atomic increment
         db.execute(
-            f"UPDATE {config.shares_table} SET view_count = view_count + 1 WHERE share_code = ?",
+            _sql(
+                f"UPDATE {config.shares_table} SET view_count = view_count + 1 WHERE share_code = ?",
+                config,
+            ),
             (share_code,),
         )
         db.commit()
@@ -84,7 +104,10 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
         user_id = getattr(user, config.user_id_field, None) or user.get(config.user_id_field)
 
         row = db.execute(
-            f"SELECT {config.user_referral_code_field} FROM {config.users_table} WHERE {config.user_id_field} = ?",
+            _sql(
+                f"SELECT {config.user_referral_code_field} FROM {config.users_table} WHERE {config.user_id_field} = ?",
+                config,
+            ),
             (user_id,),
         ).fetchone()
 
@@ -92,13 +115,21 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
         if not code:
             code = secrets.token_hex(4)
             db.execute(
-                f"UPDATE {config.users_table} SET {config.user_referral_code_field} = ? WHERE {config.user_id_field} = ?",
+                _sql(
+                    f"UPDATE {config.users_table} SET {config.user_referral_code_field} = ? "
+                    f"WHERE {config.user_id_field} = ?",
+                    config,
+                ),
                 (code, user_id),
             )
             db.commit()
 
         count_row = db.execute(
-            f"SELECT COUNT(*) as cnt FROM {config.referral_rewards_table} WHERE referrer_id = ?",
+            _sql(
+                f"SELECT COUNT(*) as cnt FROM {config.referral_rewards_table} "
+                f"WHERE referrer_id = ?",
+                config,
+            ),
             (user_id,),
         ).fetchone()
         count = count_row["cnt"] if count_row else 0
@@ -113,13 +144,20 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
         user_id = getattr(user, config.user_id_field, None) or user.get(config.user_id_field)
 
         row = db.execute(
-            f"SELECT {config.user_referral_code_field} FROM {config.users_table} WHERE {config.user_id_field} = ?",
+            _sql(
+                f"SELECT {config.user_referral_code_field} FROM {config.users_table} WHERE {config.user_id_field} = ?",
+                config,
+            ),
             (user_id,),
         ).fetchone()
         code = row[config.user_referral_code_field] if row else ""
 
         count_row = db.execute(
-            f"SELECT COUNT(*) as cnt FROM {config.referral_rewards_table} WHERE referrer_id = ?",
+            _sql(
+                f"SELECT COUNT(*) as cnt FROM {config.referral_rewards_table} "
+                f"WHERE referrer_id = ?",
+                config,
+            ),
             (user_id,),
         ).fetchone()
         count = count_row["cnt"] if count_row else 0
@@ -136,7 +174,10 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
 
         # Find referrer
         referrer = db.execute(
-            f"SELECT {config.user_id_field} FROM {config.users_table} WHERE {config.user_referral_code_field} = ?",
+            _sql(
+                f"SELECT {config.user_id_field} FROM {config.users_table} WHERE {config.user_referral_code_field} = ?",
+                config,
+            ),
             (body.code,),
         ).fetchone()
         if not referrer:
@@ -148,7 +189,10 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
 
         # 🔴 FIX: Idempotency check — prevent duplicate referral rewards
         existing = db.execute(
-            f"SELECT 1 FROM {config.referral_rewards_table} WHERE referee_id = ?",
+            _sql(
+                f"SELECT 1 FROM {config.referral_rewards_table} WHERE referee_id = ?",
+                config,
+            ),
             (user_id,),
         ).fetchone()
         if existing:
@@ -161,7 +205,10 @@ def create_share_router(config: ShareKitConfig) -> APIRouter:
 
         # Record
         db.execute(
-            f"INSERT INTO {config.referral_rewards_table} (referrer_id, referee_id, reward_type) VALUES (?, ?, ?)",
+            _sql(
+                f"INSERT INTO {config.referral_rewards_table} (referrer_id, referee_id, reward_type) VALUES (?, ?, ?)",
+                config,
+            ),
             (referrer_id, user_id, "referral"),
         )
         db.commit()

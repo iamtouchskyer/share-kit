@@ -1,0 +1,13 @@
+node_modules
+pnpm-lock.yaml
+
+# Test output
+tests/__screenshots__/
+test-results/
+playwright-report/
+.playwright/
+
+# Python
+__pycache__/
+*.egg-info/
+.venv/

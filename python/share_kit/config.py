@@ -4,6 +4,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from .sql import validate_paramstyle
+
 _IDENTIFIER_RE = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
 
@@ -41,6 +43,14 @@ class ShareKitConfig:
     get_db: Any = None
     get_current_user: Any = None
 
+    # Placeholder style of the host app's DB driver. The router's statements are
+    # written in one neutral form and translated by share_kit.sql:
+    #   'qmark'   → ?        sqlite3
+    #   'format'  → %s       psycopg / Postgres
+    #   'numeric' → $1, $2   asyncpg
+    # 0.1.x baked in '?', so the package could not run on Postgres at all.
+    paramstyle: str = "qmark"
+
     # Table names (for raw SQL projects)
     shares_table: str = "shares"
     users_table: str = "users"
@@ -52,7 +62,8 @@ class ShareKitConfig:
     user_referral_code_field: str = "referral_code"
 
     def __post_init__(self):
-        """Validate all identifier fields to prevent SQL injection."""
+        """Validate identifiers (SQL injection) and the placeholder style."""
+        validate_paramstyle(self.paramstyle)
         for field_name in (
             "shares_table", "users_table", "referral_rewards_table",
             "user_id_field", "user_name_field", "user_referral_code_field",
