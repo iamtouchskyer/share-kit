@@ -1,16 +1,36 @@
 {
   "name": "@iamtouchskyer/share-kit",
-  "version": "0.1.0",
-  "description": "Reusable share card + referral kit — framework-agnostic core",
+  "version": "0.2.0",
+  "description": "Reusable share card + referral kit — framework-agnostic core, zero-dependency image export",
   "type": "module",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
     "./themes": "./src/themes.js",
     "./export": "./src/export.js",
-    "./utils": "./src/utils.js"
+    "./rasterize": "./src/rasterize.js",
+    "./utils": "./src/utils.js",
+    "./backends/html2canvas": "./src/backends/html2canvas.js"
   },
   "files": ["src/"],
+  "scripts": {
+    "test": "playwright test --config tests/playwright.config.js",
+    "test:headed": "playwright test --config tests/playwright.config.js --headed",
+    "serve:demo": "node tests/server.js 8817"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.56.1"
+  },
+  "peerDependencies": {
+    "html2canvas": ">=1.4.0"
+  },
+  "peerDependenciesMeta": {
+    "html2canvas": {
+      "optional": true
+    }
+  },
+  "keywords": ["share", "share-card", "screenshot", "png", "export", "referral", "html2canvas", "foreignobject"],
   "publishConfig": {
     "access": "public"
   },

@@ -9,7 +9,13 @@ import { escapeHtml, copyToClipboard } from './utils.js';
 const STYLES = `
 .sk-root { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
 .sk-picker { display: flex; gap: 8px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
-.sk-thumb-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+.sk-thumb-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;
+  /* button reset — the thumbs are real buttons so they are reachable by keyboard */
+  background: none; border: 0; padding: 2px; font: inherit; color: inherit; border-radius: 8px;
+}
+.sk-thumb-wrap:focus-visible { outline: 2px solid #007aff; outline-offset: 2px; }
+.sk-btn:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .sk-thumb {
   width: 48px; height: 36px; border-radius: 6px; padding: 5px; cursor: pointer;
   border: 2px solid transparent; transition: border-color 0.15s, transform 0.15s;
@@ -17,7 +23,7 @@ const STYLES = `
 }
 .sk-thumb:hover { transform: scale(1.08); }
 .sk-thumb.active { border-color: #007aff; }
-.sk-thumb-label { font-size: 9px; color: #888; font-weight: 500; text-align: center; }
+.sk-thumb-label { font-size: 10px; color: #565659; font-weight: 500; text-align: center; }
 .sk-card {
   max-width: 420px; width: 100%; border-radius: 16px; overflow: hidden;
   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
@@ -44,9 +50,9 @@ const STYLES = `
   font-size: 13px; font-weight: 600; cursor: pointer;
   font-family: inherit; transition: all 0.15s;
 }
-.sk-btn.primary { background: #007aff; color: #fff; }
-.sk-btn.primary:hover { background: #0066d6; }
-.sk-btn.secondary { background: rgba(0,0,0,0.06); color: #666; }
+.sk-btn.primary { background: #0071e3; color: #fff; }   /* white on #0071e3 = 4.7:1 */
+.sk-btn.primary:hover { background: #0060c4; }
+.sk-btn.secondary { background: rgba(0,0,0,0.06); color: #4a4a4d; }
 .sk-btn.secondary:hover { background: rgba(0,0,0,0.1); }
 `;
 
@@ -102,7 +108,11 @@ export function createShareCard(container, config = {}) {
     const t = currentTheme;
     const size = getPresetSize(currentPreset);
     const bgStyle = `background:${t.cardBg}`;
-    const sizeStyle = `max-width:${size.width}px;min-height:${size.height}px`;
+    // A preset with height:'auto' (long-form) has no floor height — emitting
+    // `min-height:nullpx` would be invalid and silently ignored by the browser.
+    const sizeStyle = size.height
+      ? `max-width:${size.width}px;min-height:${size.height}px`
+      : `max-width:${size.width}px`;
 
     let bodyHtml;
     if (contentRenderer) {
@@ -137,22 +147,28 @@ export function createShareCard(container, config = {}) {
     for (const [key, t] of Object.entries(themes)) {
       const needsBorder = !t.isDark && !t.cardBg.includes('gradient');
       const borderStyle = needsBorder ? 'border:1px solid rgba(0,0,0,0.1);' : '';
-      html += `<div class="sk-thumb-wrap" data-theme="${key}"><div class="sk-thumb${key === currentThemeName ? ' active' : ''}" data-theme="${key}" style="background:${t.cardBg};${borderStyle}">${buildSkeleton(t)}</div><span class="sk-thumb-label">${t.name}</span></div>`;
+      const pressed = key === currentThemeName;
+      html += `<button type="button" class="sk-thumb-wrap" data-theme="${key}" aria-pressed="${pressed}"><span class="sk-thumb${pressed ? ' active' : ''}" data-theme="${key}" style="background:${t.cardBg};${borderStyle}">${buildSkeleton(t)}</span><span class="sk-thumb-label">${t.name}</span></button>`;
     }
     html += '</div>';
     return html;
   }
 
   function renderPresetPicker() {
-    const common = ['card', 'card-wide', 'card-square', 'twitter', 'instagram-post', 'wechat'];
+    // Keep long-form and CN-platform presets reachable from the UI, not just from
+    // the API — a preset nobody can click is a preset that does not exist.
+    const common = [
+      'card', 'card-long', 'card-square', 'card-wide',
+      'twitter', 'instagram-post', 'wechat', 'xiaohongshu',
+    ];
     let html = '<div class="sk-picker" style="margin-top:8px">';
     for (const key of common) {
       const p = presets[key];
       if (!p) continue;
       const active = key === currentPreset ? ' active' : '';
-      const ratio = `${p.width}×${p.height}`;
+      const ratio = `${p.width}×${p.height === 'auto' ? 'auto' : p.height}`;
       const shortLabel = key.replace('card-', '').replace('instagram-', 'ig-');
-      html += `<div class="sk-thumb-wrap" data-preset="${key}"><div class="sk-thumb${active}" data-preset="${key}" style="background:#f0f0f0;border:1px solid rgba(0,0,0,0.1);justify-content:center;align-items:center;font-size:7px;color:#666">${ratio}</div><span class="sk-thumb-label">${shortLabel}</span></div>`;
+      html += `<button type="button" class="sk-thumb-wrap" data-preset="${key}" aria-pressed="${key === currentPreset}" aria-label="${escapeHtml(p.label || key)}"><span class="sk-thumb${active}" data-preset="${key}" style="background:#f0f0f0;border:1px solid rgba(0,0,0,0.1);justify-content:center;align-items:center;font-size:7px;color:#666">${ratio}</span><span class="sk-thumb-label">${shortLabel}</span></button>`;
     }
     html += '</div>';
     return html;
@@ -176,24 +192,30 @@ export function createShareCard(container, config = {}) {
   }
 
   function bindEvents() {
-    container.querySelectorAll('.sk-thumb-wrap[data-theme]').forEach(wrap => {
+    container.querySelectorAll('button.sk-thumb-wrap[data-theme]').forEach(wrap => {
       wrap.addEventListener('click', () => {
         const name = wrap.dataset.theme;
         currentThemeName = name;
         currentTheme = resolveTheme(name);
-        container.querySelectorAll('[data-theme].sk-thumb').forEach(t => t.classList.remove('active'));
-        wrap.querySelector('.sk-thumb').classList.add('active');
+        container.querySelectorAll('button.sk-thumb-wrap[data-theme]').forEach(other => {
+          const on = other === wrap;
+          other.setAttribute('aria-pressed', String(on));
+          other.querySelector('.sk-thumb').classList.toggle('active', on);
+        });
         const cardEl = container.querySelector('.sk-card');
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = renderCard();
         cardEl.replaceWith(tempDiv.firstElementChild);
       });
     });
-    container.querySelectorAll('.sk-thumb-wrap[data-preset]').forEach(wrap => {
+    container.querySelectorAll('button.sk-thumb-wrap[data-preset]').forEach(wrap => {
       wrap.addEventListener('click', () => {
         currentPreset = wrap.dataset.preset;
-        container.querySelectorAll('[data-preset].sk-thumb').forEach(t => t.classList.remove('active'));
-        wrap.querySelector('.sk-thumb').classList.add('active');
+        container.querySelectorAll('button.sk-thumb-wrap[data-preset]').forEach(other => {
+          const on = other === wrap;
+          other.setAttribute('aria-pressed', String(on));
+          other.querySelector('.sk-thumb').classList.toggle('active', on);
+        });
         const cardEl = container.querySelector('.sk-card');
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = renderCard();
@@ -218,6 +240,9 @@ export function createShareCard(container, config = {}) {
     } else {
       downloadBlob(blob, `${branding.name.replace(/\s+/g, '-').toLowerCase()}-share.png`);
     }
+    // Returned so `card.exportImage()` is usable programmatically, not only as a
+    // download trigger.
+    return blob;
   }
 
   render();

@@ -1,5 +1,14 @@
 // themes.js — 6 built-in themes + factory
 // Each theme: 11 CSS properties applied as inline styles
+//
+// Contrast rule for every token that carries *text*: at least 4.5:1 against the
+// surface it sits on. An exported card is read as an image — on a phone, in a
+// chat, in print — so a token that only "looks tasteful" at 4.0:1 is a defect,
+// not a style choice. tests/card-ui.spec.js checks every shipped theme with axe.
+
+// Apple's #007aff gives white text only 4.02:1 (fails WCAG AA); #0071e3 is 4.70:1.
+// Same reasoning as the anchor colour used across the reference app.
+export const BRAND_BLUE = '#0071e3';
 
 export const themes = {
   light: {
@@ -8,11 +17,11 @@ export const themes = {
     cardBorder: 'rgba(0,0,0,0.08)',
     text: '#1d1d1f',
     secondary: '#666666',
-    accent: '#007aff',
+    accent: BRAND_BLUE,
     accentText: '#ffffff',
-    chipBg: 'rgba(0,122,255,0.08)',
-    chipText: '#007aff',
-    brand: '#999999',
+    chipBg: 'rgba(0,113,227,0.10)',
+    chipText: '#0b5aa8',
+    brand: '#6e6e73',
     contentBg: '#ffffff',
     codeBg: 'rgba(0,0,0,0.04)',
   },
@@ -21,12 +30,12 @@ export const themes = {
     cardBg: '#1c1c1e',
     cardBorder: 'rgba(255,255,255,0.1)',
     text: 'rgba(255,255,255,0.9)',
-    secondary: 'rgba(255,255,255,0.55)',
+    secondary: 'rgba(255,255,255,0.72)',
     accent: '#5ac8fa',
     accentText: '#1c1c1e',
-    chipBg: 'rgba(90,200,250,0.12)',
-    chipText: '#5ac8fa',
-    brand: 'rgba(255,255,255,0.25)',
+    chipBg: 'rgba(90,200,250,0.18)',
+    chipText: '#8fd8fb',
+    brand: 'rgba(255,255,255,0.62)',
     contentBg: 'rgba(255,255,255,0.05)',
     codeBg: 'rgba(255,255,255,0.08)',
   },
@@ -35,12 +44,12 @@ export const themes = {
     cardBg: 'linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%)',
     cardBorder: 'rgba(255,255,255,0.15)',
     text: '#ffffff',
-    secondary: 'rgba(255,255,255,0.7)',
+    secondary: 'rgba(255,255,255,0.86)',
     accent: '#a0d4ff',
     accentText: '#0d47a1',
     chipBg: 'rgba(255,255,255,0.15)',
     chipText: 'rgba(255,255,255,0.9)',
-    brand: 'rgba(255,255,255,0.4)',
+    brand: 'rgba(255,255,255,0.78)',
     contentBg: 'rgba(0,0,0,0.1)',
     codeBg: 'rgba(255,255,255,0.1)',
   },
@@ -50,11 +59,11 @@ export const themes = {
     cardBorder: 'rgba(0,0,0,0.06)',
     text: '#1d1d1f',
     secondary: '#666666',
-    accent: '#007aff',
+    accent: BRAND_BLUE,
     accentText: '#ffffff',
-    chipBg: 'rgba(0,122,255,0.08)',
-    chipText: '#007aff',
-    brand: '#999999',
+    chipBg: 'rgba(0,113,227,0.10)',
+    chipText: '#0b5aa8',
+    brand: '#6e6e73',
     contentBg: 'transparent',
     codeBg: 'rgba(0,0,0,0.04)',
   },
@@ -68,8 +77,8 @@ export const themes = {
     accent: '#00ff88',
     accentText: '#0d0d0d',
     chipBg: 'rgba(0,255,136,0.15)',
-    chipText: '#00ff88',
-    brand: 'rgba(0,255,136,0.6)',
+    chipText: '#7dffbe',
+    brand: 'rgba(0,255,136,0.85)',
     contentBg: 'rgba(0,255,136,0.05)',
     codeBg: 'rgba(0,255,136,0.1)',
   },
@@ -82,8 +91,8 @@ export const themes = {
     accent: '#8b5a2b',
     accentText: '#ffffff',
     chipBg: 'rgba(139,90,43,0.08)',
-    chipText: '#8b5a2b',
-    brand: '#a08060',
+    chipText: '#7a4d22',
+    brand: '#6b5744',
     contentBg: 'rgba(255,255,255,0.8)',
     codeBg: 'rgba(139,90,43,0.04)',
   },
