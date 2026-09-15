@@ -143,6 +143,17 @@ decision baked into the SQL.
 cd python && pip install -e ".[dev]" && pytest    # no database required
 ```
 
+## React bindings
+
+`@touchskyer/share-kit-react` wraps the card, the share button and the referral
+flow. It ships as `.jsx` with no build step, which Vite and Webpack compile
+directly; on Next.js add it to `transpilePackages`:
+
+```js
+// next.config.js
+module.exports = { transpilePackages: ['@touchskyer/share-kit-react'] };
+```
+
 ## Migration 0.1.x → 0.2.0
 
 - `html2canvasUrl` is gone: the CDN fetch at capture time meant sharing failed
