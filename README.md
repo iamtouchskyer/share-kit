@@ -114,6 +114,35 @@ alignment), that nothing is clipped, that **the capture makes no network request
 that the serializer keeps every copied computed style, and that every shipped theme
 passes axe AA. Those are the failures that otherwise ship silently.
 
+## Python backend (FastAPI)
+
+Share + referral endpoints, all project-specific behaviour injected through
+`ShareKitConfig` — table names, user fields, the reward strategy, and the DB
+driver's placeholder style.
+
+```python
+from share_kit import ShareKitConfig, create_share_router
+
+config = ShareKitConfig(
+    paramstyle="format",            # 'qmark' (sqlite3) | 'format' (psycopg) | 'numeric' (asyncpg)
+    get_db=get_db_dependency,
+    get_current_user=current_user_dependency,
+    branding={"name": "Acme", "domain": "acme.com"},
+    allowed_share_types=["streak", "result"],
+    reward_strategy=my_reward_strategy,
+)
+app.include_router(create_share_router(config))
+```
+
+Statements are written once with neutral `?` placeholders and translated per
+`paramstyle` (`share_kit/sql.py`). 0.1.x hard-coded `?`, so this backend could not
+run against Postgres — the driver style is now configuration, not a dialect
+decision baked into the SQL.
+
+```bash
+cd python && pip install -e ".[dev]" && pytest    # no database required
+```
+
 ## Migration 0.1.x → 0.2.0
 
 - `html2canvasUrl` is gone: the CDN fetch at capture time meant sharing failed
@@ -123,6 +152,9 @@ passes axe AA. Those are the failures that otherwise ship silently.
   Pass `overflow: 'clip'` for the old behaviour.
 - The live element is no longer mutated during capture.
 - Picker thumbs are `<button>`s with `aria-pressed`, so they are keyboard reachable.
+- Python: the distribution is now `share-kit` and the import is `share_kit` (was
+  `suri-share-kit` / `suri_share_kit`), and the DB driver's placeholder style is
+  configuration (`ShareKitConfig(paramstyle=...)`) instead of hard-coded `?`.
 
 ## Layout
 
@@ -130,7 +162,7 @@ passes axe AA. Those are the failures that otherwise ship silently.
 src/            framework-agnostic core (index, share-card, rasterize, export, themes, utils)
 src/backends/   optional html2canvas adapter
 react/          React bindings (@iamtouchskyer/share-kit-react)
-python/         FastAPI share + referral router
+python/         FastAPI share + referral router (share_kit) with its own tests/
 tests/          Playwright suite + harness
 ```
 
